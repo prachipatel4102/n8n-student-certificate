@@ -1,0 +1,176 @@
+{
+  "name": "topper_certificate",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -608,
+        48
+      ],
+      "id": "ccd8d337-2b97-482e-b9de-02c6d39a3b1b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1c8T1IhFdhYY3zX1s5Cbr1pq4pYVcuv2io7c2xISKByA",
+          "mode": "list",
+          "cachedResultName": "Topper_certificate",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c8T1IhFdhYY3zX1s5Cbr1pq4pYVcuv2io7c2xISKByA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "certificate ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c8T1IhFdhYY3zX1s5Cbr1pq4pYVcuv2io7c2xISKByA/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -352,
+        48
+      ],
+      "id": "2f821444-cf13-4218-a34a-663cfb52b5fc",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iVjoiY6LLmEbTaP1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function rankLabel(n) {\n  if (n === 1) return '1st';\n  if (n === 2) return '2nd';\n  if (n === 3) return '3rd';\n  return `${n}th`;\n}\n\nfunction rankTitle(n) {\n  const titles = { 1: 'First', 2: 'Second', 3: 'Third' };\n  return titles[n] || `${n}th`;\n}\n\nconst schoolName = 'Apollo International School';\nconst principalName = 'Mrs. Shah';\n\nconst esc = (v) =>\n  String(v ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n\nconst today = new Date().toLocaleDateString('en-GB', {\n  day: 'numeric',\n  month: 'long',\n  year: 'numeric',\n});\n\n// In your sheet the \"Rank\" column holds the marks (percentage)\nconst top3 = $input.all()\n  .map((item) => item.json)\n  .filter((s) => s['Student Name'] && s['Rank'] !== undefined && s['Rank'] !== '')\n  .sort((a, b) => Number(b['Rank']) - Number(a['Rank']))\n  .slice(0, 3);\n\nreturn top3.map((student, i) => {\n  const name = esc(student['Student Name']);\n  const className = esc(student['Class']);\n  const percentage = esc(student['Rank']);\n  const email = student['Email'] || '';\n  const rank = i + 1;\n\n  const html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Certificate - ${name}</title>\n<style>\n  @page { size: A4 landscape; margin: 0; }\n  body {\n    margin: 0;\n    padding: 20px;\n    background: #eef0f4;\n    font-family: 'Georgia', 'Times New Roman', serif;\n  }\n  .certificate {\n    position: relative;\n    width: 1000px;\n    height: 700px;\n    margin: auto;\n    background: #fdfcf8;\n    overflow: hidden;\n    box-shadow: 0 0 25px rgba(0,0,0,0.15);\n  }\n  .ribbon {\n    position: absolute;\n    width: 500px;\n    height: 500px;\n    z-index: 1;\n  }\n  .ribbon.top-left { top: -250px; left: -250px; transform: rotate(45deg); }\n  .ribbon.bottom-right { bottom: -250px; right: -250px; transform: rotate(45deg); }\n  .ribbon .band {\n    position: absolute;\n    width: 100%;\n    height: 90px;\n    top: 205px;\n  }\n  .ribbon .navy { background: #14213d; height: 130px; top: 185px; }\n  .ribbon .gold1 { background: linear-gradient(180deg,#e6c15c,#b8860b); height: 14px; top: 178px; }\n  .ribbon .gold2 { background: linear-gradient(180deg,#b8860b,#e6c15c); height: 10px; top: 317px; }\n\n  .border {\n    position: absolute;\n    inset: 22px;\n    border: 2px solid #b8860b;\n    z-index: 2;\n    pointer-events: none;\n  }\n  .corner {\n    position: absolute;\n    width: 90px;\n    height: 90px;\n    border: 3px solid #b8860b;\n    z-index: 3;\n  }\n  .corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }\n  .corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }\n  .corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }\n  .corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }\n\n  .content {\n    position: relative;\n    z-index: 4;\n    text-align: center;\n    padding: 55px 90px 0;\n  }\n  .logo {\n    width: 62px; height: 62px;\n    margin: 0 auto 8px;\n    border-radius: 50%;\n    background: linear-gradient(145deg,#1a2a52,#0e1730);\n    display: flex; align-items: center; justify-content: center;\n    border: 3px solid #b8860b;\n  }\n  .logo svg { width: 34px; height: 34px; }\n  .school-name {\n    font-size: 15px;\n    letter-spacing: 3px;\n    color: #14213d;\n    font-weight: bold;\n    text-transform: uppercase;\n    margin: 4px 0 2px;\n  }\n  .school-sub {\n    font-size: 11px;\n    letter-spacing: 2px;\n    color: #b8860b;\n    margin-bottom: 18px;\n  }\n  .title {\n    font-size: 46px;\n    letter-spacing: 4px;\n    color: #14213d;\n    text-transform: uppercase;\n    margin: 0;\n    font-weight: bold;\n  }\n  .subtitle {\n    font-size: 17px;\n    letter-spacing: 5px;\n    color: #b8860b;\n    text-transform: uppercase;\n    margin: 4px 0 22px;\n  }\n  .presented {\n    font-size: 13px;\n    letter-spacing: 2px;\n    color: #555;\n    text-transform: uppercase;\n    margin-bottom: 8px;\n  }\n  .name {\n    font-family: 'Brush Script MT', 'Segoe Script', cursive;\n    font-size: 48px;\n    color: #14213d;\n    border-bottom: 1px solid #b8860b;\n    display: inline-block;\n    padding: 0 40px 6px;\n    margin-bottom: 18px;\n  }\n  .line1 {\n    font-size: 12px;\n    letter-spacing: 1.5px;\n    color: #555;\n    text-transform: uppercase;\n    margin: 4px 0;\n  }\n  .course {\n    font-size: 22px;\n    letter-spacing: 2px;\n    color: #14213d;\n    font-weight: bold;\n    text-transform: uppercase;\n    margin: 2px 0 14px;\n  }\n  .achieve {\n    font-size: 12px;\n    letter-spacing: 1.5px;\n    color: #555;\n    text-transform: uppercase;\n    margin: 4px 0;\n  }\n  .rank {\n    font-size: 22px;\n    letter-spacing: 2px;\n    color: #14213d;\n    font-weight: bold;\n    text-transform: uppercase;\n    margin: 2px 0 2px;\n  }\n  .marks {\n    font-size: 14px;\n    color: #555;\n    margin-bottom: 10px;\n  }\n\n  .footer {\n    position: relative;\n    z-index: 4;\n    display: flex;\n    justify-content: space-between;\n    align-items: flex-end;\n    padding: 0 90px;\n    margin-top: 10px;\n  }\n  .footer .block { width: 200px; text-align: center; }\n  .footer .line { border-top: 1px solid #999; padding-top: 6px; font-size: 12px; letter-spacing: 1px; color: #555; text-transform: uppercase; }\n  .seal {\n    width: 90px; height: 90px;\n    border-radius: 50%;\n    background: radial-gradient(circle at 35% 30%, #f3d27a, #b8860b 70%, #8a6508);\n    display: flex; align-items: center; justify-content: center;\n    text-align: center;\n    color: #14213d;\n    font-size: 9px;\n    font-weight: bold;\n    letter-spacing: 1px;\n    border: 3px solid #fdfcf8;\n    box-shadow: 0 0 0 2px #b8860b;\n    text-transform: uppercase;\n  }\n  .signature {\n    font-family: 'Brush Script MT', 'Segoe Script', cursive;\n    font-size: 30px;\n    color: #1f3a93;\n    margin-bottom: 2px;\n  }\n</style>\n</head>\n<body>\n  <div class=\"certificate\">\n    <div class=\"ribbon top-left\">\n      <div class=\"band gold1\"></div>\n      <div class=\"band navy\"></div>\n      <div class=\"band gold2\"></div>\n    </div>\n    <div class=\"ribbon bottom-right\">\n      <div class=\"band gold1\"></div>\n      <div class=\"band navy\"></div>\n      <div class=\"band gold2\"></div>\n    </div>\n\n    <div class=\"border\"></div>\n    <div class=\"corner tl\"></div>\n    <div class=\"corner tr\"></div>\n    <div class=\"corner bl\"></div>\n    <div class=\"corner br\"></div>\n\n    <div class=\"content\">\n      <div class=\"logo\">\n        <svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n          <path d=\"M12 3L2 8l10 5 10-5-10-5z\" fill=\"#e6c15c\"/>\n          <path d=\"M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5\" stroke=\"#e6c15c\" stroke-width=\"1.4\" fill=\"none\"/>\n        </svg>\n      </div>\n      <div class=\"school-name\">${schoolName}</div>\n      <div class=\"school-sub\">&bull; EXCELLENCE IN EDUCATION &bull;</div>\n\n      <h1 class=\"title\">Certificate</h1>\n      <div class=\"subtitle\">OF ACHIEVEMENT</div>\n\n      <div class=\"presented\">This certificate is proudly presented to</div>\n      <div class=\"name\">${name}</div>\n\n      <div class=\"line1\">For securing outstanding academic results in</div>\n      <div class=\"course\">Class ${className}</div>\n\n      <div class=\"achieve\">In recognition of</div>\n      <div class=\"rank\">${rankLabel(rank)} Rank &mdash; ${rankTitle(rank)} Position</div>\n      <div class=\"marks\">with <b>${percentage}%</b> marks</div>\n    </div>\n\n    <div class=\"footer\">\n      <div class=\"block\">\n        <div class=\"date-text\">Date: ${today}</div>\n      </div>\n      <div class=\"seal\">Official<br>Seal</div>\n      <div class=\"block\">\n        <div class=\"signature\">${principalName}</div>\n        <div class=\"line\">Principal's Signature</div>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  return {\n    json: {\n      name: student['Student Name'],\n      className: student['Class'],\n      marks: student['Rank'],\n      email,\n      rank,\n      html,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        48
+      ],
+      "id": "cc7ff8ba-801a-4ad8-8910-19d7de5bc855",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "certificate.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        48
+      ],
+      "id": "5108a0ed-15a0-48e5-83ac-ba7f3d8b9193",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code in JavaScript').item.json.email }}",
+        "subject": "={{ $('Code in JavaScript').item.json.email }}",
+        "message": "Congratulation! Please find your  certificate attached",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        48
+      ],
+      "id": "27063493-bf4e-45a6-9ff4-f46d2c286071",
+      "name": "Send a message",
+      "webhookId": "0799ab84-5dfe-460f-871b-ba87962899a1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WX3Q9Xs4YoFQ2yHi",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c6a6f61c-4ae5-42cd-993c-9470bbdae50d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9deb8bfd7221fba57659f15ff6c6f49f8d5555cde6ce458e704e79010b9c91dd"
+  },
+  "nodeGroups": [],
+  "id": "tHiG5zEQWQIAUKHv",
+  "tags": []
+}
